@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mim Stars</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        /* --- CSS STYLING (BUMS / Mim Stars Theme) --- */
+        :root {
+            --bg-color: #0f172a;
+            --sidebar-bg: rgba(0, 0, 0, 0.6);
+            --card-bg: #1e293b;
+            --primary: #f59e0b; /* Coin Gold */
+            --energy: #3b82f6; /* Blue Energy */
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('https://img.freepik.com/free-vector/cartoon-night-city-street- skyscrapers-buildings_1441-2172.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            overflow: hidden; /* No scrolling */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Overlay to darken background */
+        body::before {
+            content: '';
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: -1;
+        }
+
+        /* --- HEADER --- */
+        .top-bar {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 40px; height: 40px;
+            background: #6366f1;
+            border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; border: 2px solid #fff;
+        }
+        .level-info { font-size: 12px; }
+        .lvl-bar-bg { width: 80px; height: 4px; background: #333; margin-top: 4px; border-radius: 2px; }
+        .lvl-bar-fill { width: 30%; height: 100%; background: #3b82f6; border-radius: 2px; }
+
+        .top-stats {
+            display: flex; gap: 15px; font-size: 12px;
+        }
+        .stat-box { text-align: right; }
+        .stat-val { font-weight: bold; font-size: 14px; }
+
+        /* --- MAIN GAME AREA --- */
+        .main-stage {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Balance */
+        .balance-wrap {
+            text-align: center;
+            margin-bottom: 20px;
+            margin-top: -40px; /* Push up slightly */
+        }
+        .coin-img { width: 24px; vertical-align: middle; }
+        .main-balance {
+            font-size: 42px;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        /* Character / Tap Button */
+        .character-container {
+            position: relative;
+            width: 280px;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .character-container:active { transform: scale(0.97); }
+        
+        .character-img {
+            font-size: 150px;
+            filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.4));
+            z-index: 2;
+        }
+        /* Tap Me Text */
+        .tap-hint {
+            position: absolute;
+            bottom: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px #000;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* --- SIDEBARS (Left & Right) --- */
+        .sidebar {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+        .sidebar-left { left: 10px; }
+        .sidebar-right { right: 10px; }
+
+        .side-icon {
+            width: 50px; height: 50px;
+            background: linear-gradient(180deg, #334155, #1e293b);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-size: 10px; color: #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .side-icon span { font-size: 20px; margin-bottom: 2px; }
+        .side-icon p { margin: 0; font-size: 9px; }
+
+        /* --- BOTTOM STATS (Energy) --- */
+        .bottom-stats-bar {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        }
+        .energy-box {
+            display: flex; align-items: center; gap: 8px;
+            background: #1e293b;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            width: 60%;
+        }
+        .bolt-icon { color: #3b82f6; font-size: 18px; }
+        .energy-text { font-size: 14px; font-weight: bold; }
+        
+        .per-tap-box {
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* --- FOOTER NAV --- */
+        .footer-nav {
+            height: 70px;
+            background: #1e293b;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #334155;
+            padding-bottom: 5px;
+        }
+        .nav-btn {
+            display: flex; flex-direction: column; align-items: center;
+            color: #64748b; font-size: 10px; gap: 4px;
+            width: 20%;
+        }
+        .nav-btn.active { color: #fbbf24; }
+        .nav-icon { font-size: 22px; margin-bottom: 2px; }
+
+        /* --- ANIMATIONS --- */
+        .float-text {
+            position: absolute;
+            color: #fff; font-weight: bold; font-size: 28px;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 100;
+            text-shadow: 0 0 5px orange;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.2); opacity: 0; }
+        }
+
+        /* Modal/Popup styling (Simplified) */
+        .modal {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1e293b; padding: 20px; border-radius: 15px;
+            text-align: center; width: 80%; border: 1px solid #475569;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <header class="top-bar">
+        <div class="user-profile">
+            <div class="avatar" id="userAvatar">U</div>
+            <div>
+                <div style="font-weight:bold" id="userName">User</div>
+                <div class="level-info">Lvl 1</div>
+                <div class="lvl-bar-bg"><div class="lvl-bar-fill"></div></div>
+            </div>
+        </div>
+        <div class="top-stats">
+            <div class="stat-box">
+                <div class="stat-val" style="color:#60a5fa">0</div>
+                <div style="color:#94a3b8">Diamonds</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" style="color:#a78bfa">0</div>
+                <div style="color:#94a3b8">Ton</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN GAME AREA -->
+    <div class="main-stage">
+        
+        <!-- Balance Display -->
+        <div class="balance-wrap">
+            <div class="main-balance">
+                <span style="color: gold; font-size: 30px;">🟡</span>
+                <span id="displayBalance">0</span>
+            </div>
+        </div>
+
+        <!-- Left Sidebar -->
+        <div class="sidebar sidebar-left">
+            <div class="side-icon" onclick="showAlert('Upgrade Shop coming soon!')">
+                <span>🚀</span>
+                <p>Upgrade</p>
+            </div>
+            <div class="side-icon" onclick="showAlert('Passport ID: # Mim-123')">
+                <span>🎫</span>
+                <p>Passport</p>
+            </div>
+            <div class="side-icon" onclick="showAlert('Skins coming soon!')">
+                <span>👕</span>
+                <p>Skins</p>
+            </div>
+            <div class="side-icon" onclick="showAlert('Task list is empty!')">
+                <span>📝</span>
+                <p>Task</p>
+            </div>
+            <div class="side-icon" onclick="inviteFriend()">
+                <span>📨</span>
+                <p>Invite</p>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar sidebar-right">
+            <div class="side-icon" onclick="showAlert('Super Avatar Locked')">
+                <span>🦸</span>
+                <p>Avatar</p>
+            </div>
+            <div class="side-icon" onclick="claimDaily()">
+                <span>📅</span>
+                <p>Daily</p>
+            </div>
+            <div class="side-icon" onclick="showAlert('Battle Arena Closed')">
+                <span>⚔️</span>
+                <p>Battle</p>
+            </div>
+            <div class="side-icon" onclick="showAlert('Expedition Starting...')">
+                <span>🧭</span>
+                <p>Explore</p>
+            </div>
+            <div class="side-icon" onclick="toggleAutoTap()">
+                <span>🤖</span>
+                <p>AutoTap</p>
+            </div>
+        </div>
+
+        <!-- Character (Tap Zone) -->
+        <div class="character-container" id="tapZone">
+            <!-- Using Emoji as placeholder for Mim Star Character -->
+            <div class="character-img">🦁</div> 
+            <div class="tap-hint">Tap Me</div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM STATS -->
+    <div class="bottom-stats-bar">
+        <div class="energy-box">
+            <span class="bolt-icon">⚡</span>
+            <span class="energy-text"><span id="currEnergy">1000</span> / <span id="maxEnergy">1000</span></span>
+        </div>
+        <div class="per-tap-box">
+            🟡 +<span id="perTap">1</span>
+        </div>
+    </div>
+
+    <!-- FOOTER NAVIGATION -->
+    <nav class="footer-nav">
+        <div class="nav-btn active">
+            <span class="nav-icon">🪙</span>
+            Home
+        </div>
+        <div class="nav-btn" onclick="showAlert('Game Center')">
+            <span class="nav-icon">🎮</span>
+            Games
+        </div>
+        <div class="nav-btn" onclick="showAlert('Slot Machine')">
+            <span class="nav-icon">🎰</span>
+            Slot
+        </div>
+        <div class="nav-btn" onclick="showAlert('Treasure Hunter')">
+            <span class="nav-icon">🏹</span>
+            Hunt
+        </div>
+        <div class="nav-btn" onclick="showAlert('Airdrop Info')">
+            <span class="nav-icon">💰</span>
+            Airdrop
+        </div>
+    </nav>
+
+    <!-- JS Logic -->
+    <script>
+        // --- TELEGRAM INIT ---
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Full screen
+        tg.enableClosingConfirmation();
+        
+        // --- GAME VARIABLES ---
+        let user = tg.initDataUnsafe.user || { id: 'guest', first_name: 'Guest', username: 'guest' };
+        
+        // Use Telegram ID as key to save data separately for each user
+        const STORAGE_KEY = `mimstars_data_${user.id}`;
+
+        const defaultData = {
+            balance: 0,
+            energy: 1000,
+            maxEnergy: 1000,
+            perTap: 1,
+            lastSave: Date.now()
+        };
+
+        let gameData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+
+        // UI References
+        const els = {
+            balance: document.getElementById('displayBalance'),
+            currEnergy: document.getElementById('currEnergy'),
+            maxEnergy: document.getElementById('maxEnergy'),
+            perTap: document.getElementById('perTap'),
+            tapZone: document.getElementById('tapZone'),
+            userName: document.getElementById('userName'),
+            userAvatar: document.getElementById('userAvatar')
+        };
+
+        // --- INITIAL SETUP ---
+        function init() {
+            // Set User Info
+            els.userName.innerText = user.first_name;
+            els.userAvatar.innerText = user.first_name.charAt(0).toUpperCase();
+
+            // Calculate Energy Regen (Offline)
+            const now = Date.now();
+            const elapsedSeconds = (now - gameData.lastSave) / 1000;
+            const regenAmount = Math.floor(elapsedSeconds); // 1 energy per second
+            
+            gameData.energy = Math.min(gameData.maxEnergy, gameData.energy + regenAmount);
+            
+            updateUI();
+            
+            // Start loops
+            setInterval(regenLoop, 1000);
+            setInterval(saveData, 5000); // Auto save every 5s
+        }
+
+        // --- CORE FUNCTIONS ---
+        function updateUI() {
+            els.balance.innerText = gameData.balance.toLocaleString();
+            els.currEnergy.innerText = gameData.energy;
+            els.maxEnergy.innerText = gameData.maxEnergy;
+            els.perTap.innerText = gameData.perTap;
+        }
+
+        function saveData() {
+            gameData.lastSave = Date.now();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+        }
+
+        function regenLoop() {
+            if (gameData.energy < gameData.maxEnergy) {
+                gameData.energy++;
+                updateUI();
+            }
+        }
+
+        // --- TAP LOGIC ---
+        function handleTap(e) {
+            // Prevent default zooming/scrolling
+            e.preventDefault(); 
+            
+            // Allow multi-touch
+            const touches = e.touches || [{ clientX: e.clientX, clientY: e.clientY }];
+
+            for (let i = 0; i < touches.length; i++) {
+                const touch = touches[i];
+                
+                if (gameData.energy >= gameData.perTap) {
+                    // Logic
+                    gameData.balance += gameData.perTap;
+                    gameData.energy -= gameData.perTap;
+                    
+                    // Visuals
+                    showFloatText(touch.clientX, touch.clientY, `+${gameData.perTap}`);
+                    
+                    // Haptics (Vibration)
+                    if(tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('medium');
+                    }
+                }
+            }
+            updateUI();
+            
+            // Animation on character
+            const charImg = document.querySelector('.character-img');
+            charImg.style.transform = 'scale(0.95)';
+            setTimeout(() => charImg.style.transform = 'scale(1)', 100);
+        }
+
+        function showFloatText(x, y, text) {
+            const el = document.createElement('div');
+            el.className = 'float-text';
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        // --- EVENTS ---
+        els.tapZone.addEventListener('touchstart', handleTap, {passive: false});
+        els.tapZone.addEventListener('mousedown', (e) => {
+            // Only for desktop testing
+            if(!('ontouchstart' in window)) handleTap(e);
+        });
+
+        // --- FEATURE FUNCTIONS ---
+        window.inviteFriend = function() {
+            const botLink = "https://t.me/MimStarsBot";
+            const inviteUrl = `https://t.me/share/url?url=${botLink}&text=Join Mim Stars and earn coins!`;
+            tg.openTelegramLink(inviteUrl);
+        }
+
+        window.showAlert = function(msg) {
+            tg.showAlert(msg);
+        }
+        
+        window.claimDaily = function() {
+            gameData.balance += 1000;
+            tg.showAlert("You claimed 1,000 Daily Coins!");
+            updateUI();
+            saveData();
+        }
+
+        let autoTapInterval = null;
+        window.toggleAutoTap = function() {
+            if(autoTapInterval) {
+                clearInterval(autoTapInterval);
+                autoTapInterval = null;
+                tg.showAlert("AutoTap Disabled");
+            } else {
+                tg.showAlert("AutoTap Activated (Demo Mode)");
+                autoTapInterval = setInterval(() => {
+                    if (gameData.energy >= gameData.perTap) {
+                        gameData.balance += gameData.perTap;
+                        gameData.energy -= gameData.perTap;
+                        updateUI();
+                    }
+                }, 500);
+            }
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
